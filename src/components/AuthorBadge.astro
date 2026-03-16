@@ -1,0 +1,21 @@
+---
+interface Props {
+  type: 'human' | 'ai' | 'collaborative' | 'other';
+}
+
+const { type } = Astro.props;
+
+const badges = {
+  human: { emoji: '🌿', label: 'Human', classes: 'bg-green-100 text-green-800' },
+  ai: { emoji: '🤖', label: 'AI', classes: 'bg-blue-100 text-blue-800' },
+  collaborative: { emoji: '🌀', label: 'Collaborative', classes: 'bg-purple-100 text-purple-800' },
+  other: { emoji: '🍄', label: 'Other', classes: 'bg-amber-100 text-amber-800' },
+};
+
+const badge = badges[type];
+---
+
+<span class={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium font-inter ${badge.classes}`}>
+  <span>{badge.emoji}</span>
+  <span>{badge.label}</span>
+</span>

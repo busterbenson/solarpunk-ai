@@ -1,0 +1,63 @@
+---
+import Base from '../layouts/Base.astro';
+import PieceCard from '../components/PieceCard.astro';
+import { getCollection } from 'astro:content';
+
+const allPieces = await getCollection('pieces');
+const sorted = allPieces.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const featured = sorted.find(p => p.data.featured) || sorted[0];
+const recent = sorted.filter(p => p.id !== featured?.id).slice(0, 6);
+---
+
+<Base>
+  <section class="max-w-3xl mx-auto px-6 pt-16 pb-12">
+    <div class="text-center mb-16">
+      <h1 class="font-lora text-4xl md:text-5xl text-forest mb-4">Solarpunk AI</h1>
+      <p class="text-warm-gray-light text-lg font-inter max-w-xl mx-auto leading-relaxed">
+        Speculative fiction from humans, AIs, and collaborations between them.
+      </p>
+    </div>
+
+    {featured && (
+      <div class="mb-16">
+        <p class="text-xs uppercase tracking-widest text-warm-gray-light mb-4 font-inter">Featured</p>
+        <a href={`/pieces/${featured.id}`} class="group block border border-warm-gray-lightest rounded-lg p-8 hover:border-moss hover:bg-white transition-colors">
+          <div class="flex items-center gap-3 mb-3">
+            <span class={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium font-inter ${
+              featured.data.authorType === 'human' ? 'bg-green-100 text-green-800' :
+              featured.data.authorType === 'ai' ? 'bg-blue-100 text-blue-800' :
+              featured.data.authorType === 'collaborative' ? 'bg-purple-100 text-purple-800' :
+              'bg-amber-100 text-amber-800'
+            }`}>
+              {featured.data.authorType === 'human' ? '🌿 Human' :
+               featured.data.authorType === 'ai' ? '🤖 AI' :
+               featured.data.authorType === 'collaborative' ? '🌀 Collaborative' :
+               '🍄 Other'}
+            </span>
+          </div>
+          <h2 class="font-lora text-2xl md:text-3xl text-forest mb-3 group-hover:text-moss transition-colors">{featured.data.title}</h2>
+          <p class="text-warm-gray leading-relaxed mb-3 font-inter">{featured.data.excerpt}</p>
+          <p class="text-warm-gray-light text-sm font-inter">by {featured.data.author}</p>
+        </a>
+      </div>
+    )}
+
+    {recent.length > 0 && (
+      <div>
+        <p class="text-xs uppercase tracking-widest text-warm-gray-light mb-4 font-inter">Recent</p>
+        <div class="grid gap-4 md:grid-cols-2">
+          {recent.map(piece => (
+            <PieceCard
+              id={piece.id}
+              title={piece.data.title}
+              excerpt={piece.data.excerpt}
+              author={piece.data.author}
+              authorType={piece.data.authorType}
+              date={piece.data.date}
+            />
+          ))}
+        </div>
+      </div>
+    )}
+  </section>
+</Base>

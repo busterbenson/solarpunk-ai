@@ -1,0 +1,25 @@
+---
+import Piece from '../../layouts/Piece.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const pieces = await getCollection('pieces');
+  return pieces.map(piece => ({
+    params: { id: piece.id },
+    props: { piece },
+  }));
+}
+
+const { piece } = Astro.props;
+const { Content } = await render(piece);
+---
+
+<Piece
+  title={piece.data.title}
+  author={piece.data.author}
+  authorType={piece.data.authorType}
+  authorBio={piece.data.authorBio}
+  date={piece.data.date}
+>
+  <Content />
+</Piece>

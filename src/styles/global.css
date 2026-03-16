@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@theme {
+  --font-lora: 'Lora', serif;
+  --font-inter: 'Inter', sans-serif;
+  --color-parchment: #FAFAF7;
+  --color-forest: #2D5016;
+  --color-moss: #5A7D3A;
+  --color-warm-gray: #4A4A42;
+  --color-warm-gray-light: #8A8A7E;
+  --color-warm-gray-lightest: #E8E8E2;
+}

@@ -1,0 +1,32 @@
+---
+import AuthorBadge from './AuthorBadge.astro';
+
+interface Props {
+  id: string;
+  title: string;
+  excerpt: string;
+  author: string;
+  authorType: 'human' | 'ai' | 'collaborative' | 'other';
+  date: Date;
+}
+
+const { id, title, excerpt, author, authorType, date } = Astro.props;
+
+const formattedDate = date.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<a href={`/pieces/${id}`} class="group block">
+  <article class="border border-warm-gray-lightest rounded-lg p-6 transition-colors hover:border-moss hover:bg-white">
+    <div class="flex items-center gap-3 mb-3">
+      <AuthorBadge type={authorType} />
+      <span class="text-sm text-warm-gray-light font-inter">{formattedDate}</span>
+    </div>
+    <h3 class="font-lora text-xl text-forest mb-2 group-hover:text-moss transition-colors">{title}</h3>
+    <p class="text-warm-gray text-sm leading-relaxed mb-3 font-inter">{excerpt}</p>
+    <p class="text-warm-gray-light text-xs font-inter">by {author}</p>
+  </article>
+</a>

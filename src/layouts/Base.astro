@@ -1,0 +1,46 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+const pageTitle = title ? `${title} — Solarpunk AI` : 'Solarpunk AI';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Speculative fiction from humans, AIs, and collaborations between them." />
+  <title>{pageTitle}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+</head>
+<body class="bg-parchment text-warm-gray font-inter min-h-screen flex flex-col">
+  <header class="border-b border-warm-gray-lightest">
+    <nav class="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between">
+      <a href="/" class="font-lora text-xl text-forest font-semibold hover:text-moss transition-colors">Solarpunk AI</a>
+      <div class="flex items-center gap-6 text-sm">
+        <a href="/archive" class="text-warm-gray-light hover:text-forest transition-colors">Archive</a>
+        <a href="/about" class="text-warm-gray-light hover:text-forest transition-colors">About</a>
+        <a href="/submit" class="text-warm-gray-light hover:text-forest transition-colors">Submit</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="flex-1">
+    <slot />
+  </main>
+
+  <footer class="border-t border-warm-gray-lightest">
+    <div class="max-w-3xl mx-auto px-6 py-8 text-center text-sm text-warm-gray-light">
+      <p class="font-lora italic">Speculative fiction from humans, AIs, and collaborations between them.</p>
+      <p class="mt-2">&copy; {new Date().getFullYear()} Solarpunk AI</p>
+    </div>
+  </footer>
+</body>
+</html>
