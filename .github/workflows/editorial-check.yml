@@ -1,0 +1,119 @@
+name: Editorial Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_review:
+    types: [submitted]
+  issue_comment:
+    types: [created]
+
+jobs:
+  editorial-gates:
+    name: Editorial Gates
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      issues: read
+
+    steps:
+      - name: Check all editorial requirements
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request
+              || (await github.rest.pulls.get({
+                   owner: context.repo.owner,
+                   repo: context.repo.repo,
+                   pull_number: context.issue?.number || context.payload.pull_request?.number
+                 })).data;
+
+            if (!pr) { core.info('No PR context, skipping.'); return; }
+
+            const prNumber = pr.number;
+            const createdAt = new Date(pr.created_at);
+            const now = new Date();
+            const ageMs = now - createdAt;
+            const ageDays = ageMs / (1000 * 60 * 60 * 24);
+
+            const REQUIRED_EDITORS = ['busterbenson', 'chalantbot'];
+            const MIN_DAYS = 3;
+            const SUGGESTION_TAG = '[SUGGESTION]';
+
+            const errors = [];
+            const info = [];
+
+            // --- 1. Minimum draft period ---
+            if (ageDays < MIN_DAYS) {
+              const remaining = Math.ceil(MIN_DAYS - ageDays);
+              errors.push(`⏳ **Draft period:** ${remaining} day(s) remaining (minimum ${MIN_DAYS} days from first opening)`);
+            } else {
+              info.push(`✅ Draft period: ${Math.floor(ageDays)} days (minimum met)`);
+            }
+
+            // --- 2. Reviews from both editors ---
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            // Get the latest review state per editor
+            const latestReviews = {};
+            for (const review of reviews) {
+              latestReviews[review.user.login] = review.state;
+            }
+
+            for (const editor of REQUIRED_EDITORS) {
+              const state = latestReviews[editor];
+              if (state === 'APPROVED') {
+                info.push(`✅ ${editor} approved`);
+              } else if (state === 'CHANGES_REQUESTED') {
+                errors.push(`🔄 **${editor}** requested changes (re-review needed after updates)`);
+              } else {
+                errors.push(`👁️ **${editor}** has not yet reviewed`);
+              }
+            }
+
+            // --- 3. Suggestions from both editors ---
+            const { data: comments } = await github.rest.pulls.listReviewComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            // Also check regular PR comments
+            const { data: issueComments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const allComments = [
+              ...comments.map(c => ({ user: c.user.login, body: c.body })),
+              ...issueComments.map(c => ({ user: c.user.login, body: c.body })),
+            ];
+
+            for (const editor of REQUIRED_EDITORS) {
+              const hasSuggestion = allComments.some(
+                c => c.user === editor && c.body.includes(SUGGESTION_TAG)
+              );
+              if (hasSuggestion) {
+                info.push(`✅ ${editor} left a suggestion`);
+              } else {
+                errors.push(`💬 **${editor}** hasn't left a \`[SUGGESTION]\` comment yet`);
+              }
+            }
+
+            // --- Report ---
+            const lines = ['## Editorial Checklist\n'];
+            lines.push(...info);
+            if (errors.length) lines.push('', ...errors);
+
+            if (errors.length > 0) {
+              lines.push('\n---\n*This piece needs a little more time or attention before it can go live. That\'s the process — it makes the work better.*');
+              core.setFailed(lines.join('\n'));
+            } else {
+              lines.push('\n✨ **All gates passed — ready to publish!**');
+              core.info(lines.join('\n'));
+            }
